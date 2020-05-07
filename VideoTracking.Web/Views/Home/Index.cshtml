@@ -1,0 +1,72 @@
+﻿<!--
+//===============================================================================
+// Microsoft FastTrack for Azure
+// Video Playback Tracking Samples
+//===============================================================================
+// Copyright © Microsoft Corporation.  All rights reserved.
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY
+// OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT
+// LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+// FITNESS FOR A PARTICULAR PURPOSE.
+//===============================================================================
+-->
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="row" style="margin-top:20px">
+    <div class="col-md-12">
+        <b>Select a video to play:</b>&nbsp;
+        <select id="videos" name="videos">
+            <option value="https://nimccollftastg.blob.core.windows.net/media/Customer1/ArchiveTopBitrate_video_3500000.mp4" selected>FastTrack DevOps Pipelines</option>
+            <option value="https://nimccollftastg.blob.core.windows.net/media/Customer1/SampleVideo_360x240_1mb.mp4">Sample Video 360X240</option>
+            <option value="https://nimccollftastg.blob.core.windows.net/media/Customer1/SampleVideo_640x360_1mb.mp4">Sample Video 640X360</option>
+        </select>
+    </div>
+</div>
+<div class="row" style="margin-top:20px">
+    <div class="col-md-12">
+        <video id="vidToPlay" name="vidToPlay" src="https://nimccollftastg.blob.core.windows.net/media/Customer1/ArchiveTopBitrate_video_3500000.mp4" oncontextmenu="return false;" controls></video>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        var startDateTime;
+        var endDateTime;
+
+        function recordVideoUsage() {
+            endDateTime = new Date();
+            var endDateTimeString = endDateTime.getFullYear() + '/' + (endDateTime.getMonth() + 1) + '/' + endDateTime.getDate() + ' ' + endDateTime.getHours() + ':' + endDateTime.getMinutes() + ':' + endDateTime.getSeconds();
+            var startDateTimeString = startDateTime.getFullYear() + '/' + (startDateTime.getMonth() + 1) + '/' + startDateTime.getDate() + ' ' + startDateTime.getHours() + ':' + startDateTime.getMinutes() + ':' + startDateTime.getSeconds();
+            var source = $('#vidToPlay').attr('src');
+            var trackingData = source + ',' + startDateTimeString + ',' + endDateTimeString;
+            $.post("/api/videotracking", { '': trackingData });
+        }
+
+        $(document).ready(function ($) {
+            $('#vidToPlay').on('play', function (e) {
+                startDateTime = new Date();
+            });
+            $('#vidToPlay').on('pause', function (e) {
+                recordVideoUsage();
+            });
+            $('#videos').on('change', function (e) {
+                var vidToPlay = document.getElementById('vidToPlay');
+                var paused = vidToPlay.paused;
+                if (!paused) {
+                    recordVideoUsage();
+                }
+                $('#vidToPlay').attr('src', $('#videos').val());
+            });
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            var vidToPlay = document.getElementById('vidToPlay');
+            var paused = vidToPlay.paused;
+            if (!paused) {
+                vidToPlay.pause();
+            }
+        });
+    </script>
+}
